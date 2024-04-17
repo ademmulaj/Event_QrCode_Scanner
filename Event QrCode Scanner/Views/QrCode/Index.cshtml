@@ -1,0 +1,202 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5 mb-4">Skaneri i QR kodit</h1>
+        <div class="d-flex justify-content-between mb-3">
+            <div>
+                <button id="startButton" class="btn btn-primary me-2">Starto kameren</button>
+                <button id="stopButton" class="btn btn-danger">Ndalo kameren</button>
+            </div>
+            <button id="compareButton" class="btn btn-info">Perditeso Listen</button>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <video id="videoElement" class="w-100"></video>
+            </div>
+            <div class="col-md-6">
+                <h3>Te dhenat e skanuara te kodit QR</h3>
+                <div class="table-responsive">
+                    <table id="qrDataTable" class="table">
+                        <thead>
+                            <tr>
+                                <th class="col-md-2">ID</th>
+                                <th class="col-md-4">Koha e Skanimit</th>
+                                <th class="col-md-6">QR Kodi Dekoduar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Te dhenat do te futen ne menyre dinamike ketu -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        const video = document.getElementById('videoElement');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const compareButton = document.getElementById('compareButton');
+        let stream;
+
+        perditsoQRkodListen();
+
+        startButton.addEventListener('click', startoKameren);
+        stopButton.addEventListener('click', ndaloKameren);
+        compareButton.addEventListener('click', krahasoQRkodin);
+
+        function startoKameren() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(neStartKamera)
+                .catch(onCameraError);
+        }
+
+        function neStartKamera(cameraStream) {
+            stream = cameraStream;
+            video.srcObject = stream;
+            video.play(); // Start playing the video
+            // Add an event listener for the 'loadedmetadata' event on the video element
+            video.addEventListener('loadedmetadata', function () {
+                // Call the kontrolloQRkod function once the video metadata has loaded
+                requestAnimationFrame(kontrolloQRkod);
+            });
+        }
+
+        function ndaloKameren() {
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                });
+            }
+        }
+
+        function krahasoQRkodin() {
+            $.ajax({
+                type: 'POST',
+                url: '/QrCode/UpdateSpreadsheet',
+                success: function (response) {
+                    showNotification('success', 'Success!', response);
+                    // Display a SweetAlert informing the user that the list has been updated
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Info',
+                        text: 'Lista eshte e perditesuar',
+                        showCloseButton: false,
+                        timer: 2000
+                    });
+                },
+                error: function (error) {
+                    showNotification('error', 'Error!', 'Deshtim i validimit');
+                    console.error('Error ne perditesimin e spreadsheet:', error);
+                }
+            });
+        }
+
+        let lastScanTime = 0;
+        const scanDelay = 2500; // vonesa ndermjet skanimeve (milisekonda)
+
+        function kontrolloQRkod() {
+            console.log("Checking for QR code...");
+
+            // llogaritni kohen e kaluar nga skanimi i fundit
+            const currentTime = performance.now();
+            const elapsedTime = currentTime - lastScanTime;
+
+            // Kontrolloni nese ka kaluar kohe e mjaftueshme per te kryer nje tjeter skanim
+            if (elapsedTime >= scanDelay) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                if (code && code.data) {
+                    console.log("QR code detected:", code.data);
+                    const qrData = code.data;
+                    ruajQRkodData(qrData);
+                } else {
+                    console.log("No QR code detected");
+                }
+
+                // Perditeso kohen e fundit te skanimit
+                lastScanTime = currentTime;
+            }
+
+            requestAnimationFrame(kontrolloQRkod);
+        }
+
+        function ruajQRkodData(qrData) {
+            console.log("QR code data:", qrData);
+            $.ajax({
+                type: 'POST',
+                url: '/QrCode/SaveQRCodeData',
+                data: { qrData },
+                success: function (response) {
+                    showNotification('success', 'Success!', response);
+                    perditsoQRkodListen();
+                },
+                error: function (error) {
+                    showNotification('error', 'Error!', 'QR Kodi tashme ekziston ne bazen e te dhenave');
+                    console.error('Gabim ne ruajtjen e te dhenave te QR kodit:', error);
+                }
+            });
+        }
+
+        function perditsoQRkodListen() {
+            $.ajax({
+                type: 'GET',
+                url: '/QrCode/GetScannedQRCodeData',
+                success: function (data) {
+                    const tbody = $('#qrDataTable tbody');
+                    tbody.empty();
+
+                    data.forEach(qrCodeData => {
+                        const row = $('<tr>').append(
+                            $('<td>').text(qrCodeData.id),
+                            $('<td>').text(qrCodeData.koha_skanimit),
+                            $('<td>').text(qrCodeData.qrCode_Data)
+                        );
+                        tbody.append(row);
+                    });
+                },
+                error: function (error) {
+                    console.error('Gabim ne nxjerrjen e te dhenave te QR kodit:', error);
+                }
+            });
+        }
+
+        function onCameraError(error) {
+            console.error('Gabim ne qasjen ne kamere:', error);
+        }
+
+        function showNotification(icon, title, message) {
+            Swal.fire({
+                icon: icon,
+                title: title,
+                text: message,
+                showCloseButton: false,
+                timer: 2000
+            });
+        }
+
+        console.log("Skripti u ngarkua me sukses");
+    </script>
+
+
+</body>
+</html>
