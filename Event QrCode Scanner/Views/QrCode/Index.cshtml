@@ -58,10 +58,18 @@
         compareButton.addEventListener('click', krahasoQRkodin);
 
         function startoKameren() {
-            navigator.mediaDevices.getUserMedia({ video: true })
+            // Specify the constraints for getUserMedia
+            const constraints = {
+                video: {
+                    facingMode: { ideal: 'environment' } // perdor kameren e pasme nese e mundur
+                }
+            };
+
+            navigator.mediaDevices.getUserMedia(constraints)
                 .then(neStartKamera)
                 .catch(onCameraError);
         }
+
 
         function neStartKamera(cameraStream) {
             stream = cameraStream;

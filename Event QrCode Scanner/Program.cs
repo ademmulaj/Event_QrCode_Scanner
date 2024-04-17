@@ -31,4 +31,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.Run();
+// Specify the IP address and port for your application to listen on
+var ipAddress = "192.168.1.6";
+var port = 2506; // Use the desired port number
+
+app.Run($"https://{ipAddress}:{port}");
