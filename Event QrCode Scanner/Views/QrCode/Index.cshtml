@@ -21,7 +21,7 @@
                 <video id="videoElement" class="w-100" width="100%" height="auto" autoplay playsinline></video>
             </div>
             <div class="col-md-6">
-                <h3>Te dhenat e skanuara te kodit QR</h3>
+                <h3>Te dhenat e QR kodit</h3>
                 <div class="table-responsive">
                     <table id="qrDataTable" class="table">
                         <thead>
@@ -32,7 +32,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                        <!-- Te dhenat do te futen ne menyre dinamike ketu -->
+                        <!-- te dhenat do te popullohen ketu -->
                         </tbody>
                     </table>
                 </div>
@@ -54,7 +54,7 @@
         perditsoQRkodListen();
 
         startButton.addEventListener('click', function (event) {
-            event.preventDefault(); // Prevent default behavior
+            event.preventDefault(); // parandaloni sjelljen default
             startoKameren();
         });
 
@@ -62,14 +62,14 @@
         compareButton.addEventListener('click', krahasoQRkodin);
 
         function startoKameren() {
-            // Specify the constraints for getUserMedia
-            const constraints = {
+            // specifikimi i kufizimet per getUserMedia
+            const kufizimet = {
                 video: {
                     facingMode: { ideal: 'environment' } // perdor kameren e pasme nese e mundur
                 }
             };
 
-            navigator.mediaDevices.getUserMedia(constraints)
+            navigator.mediaDevices.getUserMedia(kufizimet)
                 .then(neStartKamera)
                 .catch(onCameraError);
         }
@@ -78,14 +78,15 @@
         function neStartKamera(cameraStream) {
             stream = cameraStream;
             video.srcObject = stream;
-            video.play(); // Start playing the video
-            // Add an event listener for the 'loadedmetadata' event on the video element
+            video.play(); // fillo videon
+            // degjues i eventit per 'loadedmetadata' i elementtit te videos
             video.addEventListener('loadedmetadata', function () {
-                // Call the kontrolloQRkod function once the video metadata has loaded
+                // thirr per kontrollim te qr kodit
                 requestAnimationFrame(kontrolloQRkod);
             });
         }
 
+        // ndalo kameren
         function ndaloKameren() {
             if (stream) {
                 stream.getTracks().forEach(track => {
@@ -94,13 +95,14 @@
             }
         }
 
+        // krahaso listen ne databaze me ate ne excel
         function krahasoQRkodin() {
             $.ajax({
                 type: 'POST',
                 url: '/QrCode/UpdateSpreadsheet',
                 success: function (response) {
                     showNotification('success', 'Success!', response);
-                    // Display a SweetAlert informing the user that the list has been updated
+                    // SweetAlert per informimin e perdoruesit se lista edhe perditsuar
                     Swal.fire({
                         icon: 'info',
                         title: 'Info',
@@ -120,7 +122,7 @@
         const scanDelay = 2500; // vonesa ndermjet skanimeve (milisekonda)
 
         function kontrolloQRkod() {
-            console.log("Checking for QR code...");
+            console.log("Kontrollimi per QR kod...");
 
             // llogaritni kohen e kaluar nga skanimi i fundit
             const currentTime = performance.now();
@@ -138,11 +140,11 @@
                 const code = jsQR(imageData.data, imageData.width, imageData.height);
 
                 if (code && code.data) {
-                    console.log("QR code detected:", code.data);
+                    console.log("QR kod u gjet:", code.data);
                     const qrData = code.data;
                     ruajQRkodData(qrData);
                 } else {
-                    console.log("No QR code detected");
+                    console.log("QR kod nuk gjindet");
                 }
 
                 // Perditeso kohen e fundit te skanimit
@@ -153,7 +155,7 @@
         }
 
         function ruajQRkodData(qrData) {
-            console.log("QR code data:", qrData);
+            console.log("Te dhenat e QR kodi:", qrData);
             $.ajax({
                 type: 'POST',
                 url: '/QrCode/SaveQRCodeData',
@@ -163,7 +165,7 @@
                     perditsoQRkodListen();
                 },
                 error: function (error) {
-                    showNotification('error', 'Error!', 'QR Kodi tashme ekziston ne bazen e te dhenave');
+                    showNotification('error', 'Error!', 'QR Kodi tashme ekziston ne databaze!');
                     console.error('Gabim ne ruajtjen e te dhenave te QR kodit:', error);
                 }
             });
@@ -205,8 +207,6 @@
                 timer: 2000
             });
         }
-
-        console.log("Skripti u ngarkua me sukses");
     </script>
 
 

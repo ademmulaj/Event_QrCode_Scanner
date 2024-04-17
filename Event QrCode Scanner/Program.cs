@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 
 // Konfigurimi i kontekstit
@@ -24,15 +23,15 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); // Make sure to add this
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Specify the IP address and port for your application to listen on
-var ipAddress = "192.168.1.6";
-var port = 2506; // Use the desired port number
+// specifikimi i ip adreses dhe portit
+var ipAddress = "172.20.10.3";
+var port = 2506; // vendos portin e deshirurar
 
 app.Run($"https://{ipAddress}:{port}");

@@ -29,7 +29,7 @@ namespace Event_QrCode_Scanner.Controllers
             var existingQrCodeData = _context.QrCodeData.FirstOrDefault(q => q.QrCode_Data == qrData);
             if (existingQrCodeData != null)
             {
-                return BadRequest("Ky QR Kod eshte perdorur.");
+                return BadRequest("Ky QR Kod eshte i perdorur.");
             }
 
             var newQrCodeData = new QrCodeData
@@ -92,9 +92,7 @@ namespace Event_QrCode_Scanner.Controllers
             return Ok("Lista u validua me sukses");
         }
 
-
-
-
+        
         /*
         public async Task<IActionResult> DownloadSpreadsheet()
         {
