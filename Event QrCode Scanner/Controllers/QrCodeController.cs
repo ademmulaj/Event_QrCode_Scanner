@@ -99,8 +99,8 @@ namespace Event_QrCode_Scanner.Controllers
             }
             catch (Exception ex)
             {
-                // kthe error per sweetalert2
-                return Content($"<script>Swal.fire('Error', 'Kishte problem ne perditsimin e listës', 'error');</script>", "text/html");
+                // kthe error nese file nuk gjindet
+                return StatusCode(500, new { message = "Dështim i validimit ju lutem provoni me vonë!"});
             }
         }
 

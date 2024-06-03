@@ -102,7 +102,7 @@
                 url: '/QrCode/UpdateSpreadsheet',
                 success: function (response) {
                     showNotification('success', 'Success!', response);
-                    // SweetAlert per informimin e perdoruesit se lista edhe perditsuar
+                    // SweetAlert per informimin e perdoruesit se lista eshte perditsuar
                     Swal.fire({
                         icon: 'info',
                         title: 'Info',
@@ -111,9 +111,13 @@
                         timer: 2000
                     });
                 },
-                error: function (error) {
-                    showNotification('error', 'Error!', 'Deshtim i validimit');
-                    console.error('Error ne perditesimin e spreadsheet:', error);
+                error: function (error) {                   
+                    if (error.status === 500) { 
+                        const errorMessage = error.responseJSON.message; // Merr mesazhin e gabimit nga përgjigja JSON
+                        showNotification('error', 'Gabim!', errorMessage); // Shfaq njoftimin e gabimit me SweetAlert2
+                    } else {                      
+                        showNotification('error', 'Gabim!', 'Një gabim ka ndodhur.'); // Mesazh i përgjithshëm gabimi
+                    }                    
                 }
             });
         }
