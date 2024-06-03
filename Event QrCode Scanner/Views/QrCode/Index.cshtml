@@ -68,7 +68,6 @@
                     facingMode: { ideal: 'environment' } // perdor kameren e pasme nese e mundur
                 }
             };
-
             navigator.mediaDevices.getUserMedia(kufizimet)
                 .then(neStartKamera)
                 .catch(onCameraError);
@@ -169,8 +168,16 @@
                     perditsoQRkodListen();
                 },
                 error: function (error) {
-                    showNotification('error', 'Error!', 'QR Kodi tashme ekziston ne databaze!');
-                    console.error('Gabim ne ruajtjen e te dhenave te QR kodit:', error);
+                    debugger;
+                    if (error.status === 503) {                       
+                        showNotification('error', 'Gabim!', 'QR Kodi nuk është në formatin e duhur.'); 
+                    }
+                    else if(error.status === 504){
+                        showNotification('error', 'Gabim!', ' Ky QR Kod është i përdorur.');
+                    }
+                    else {
+                        showNotification('error', 'Gabim!', 'Një gabim ka ndodhur.'); // Mesazh i përgjithshëm gabimi
+                    }
                 }
             });
         }
