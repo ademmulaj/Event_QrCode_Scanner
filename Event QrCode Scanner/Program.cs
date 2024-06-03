@@ -30,8 +30,9 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// specifikimi i ip adreses dhe portit
-var ipAddress = "172.20.10.3";
-var port = 2506; // vendos portin e deshirurar
+// specifikimi i ip adreses aktuale te HOST-IT
+var ipAddress = "192.168.1.29";
+// vendos portin e deshirurar
+var port = 8080; 
 
 app.Run($"https://{ipAddress}:{port}");

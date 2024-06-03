@@ -23,6 +23,8 @@ namespace Event_QrCode_Scanner.Controllers
             return View();
         }
 
+
+        // ruan QR kodin ne databaze nese nuk eshte prezent
         [HttpPost]
         public IActionResult SaveQRCodeData(string qrData)
         {
@@ -44,6 +46,7 @@ namespace Event_QrCode_Scanner.Controllers
             return Ok("QR Kodi eshte ruar ne databaze.");
         }
 
+        // merr si liste nga databaza per ti shfaqur 
         [HttpGet]
         public IActionResult GetScannedQRCodeData()
         {
@@ -51,55 +54,64 @@ namespace Event_QrCode_Scanner.Controllers
             return Json(qrCodeDataList);
         }
 
+        // perditson excel file me te dhenat nga databaza
         [HttpPost]
         public IActionResult UpdateSpreadsheet()
         {
-            string path = "C:\\Users\\PC\\Downloads\\Event (Responses).xlsx";
-            var userIds = _context.QrCodeData.Select(q => q.QrCode_Data).ToList();
-            bool nderrimetBera = false; // Kontrollo per ndryshime
-
-            using (var workbook = new XLWorkbook(path))
+            try
             {
-                var worksheet = workbook.Worksheet(1); // sheet 1
-                var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // kalo rreshtin header 
+                string path = "C:\\Users\\PC\\Downloads\\Konferenca Dev Ops 2024 (Responses).xlsx";
+                var userIds = _context.QrCodeData.Select(q => q.QrCode_Data).ToList();
+                bool nderrimetBera = false; // Kontrollo per ndryshime
 
-                foreach (var row in rows)
+                using (var workbook = new XLWorkbook(path))
                 {
-                    string userId = row.Cell(1).GetValue<string>(); // get value from column A (userID)
-                    string status = row.Cell(6).GetValue<string>(); // get value from column F (status)
+                    var worksheet = workbook.Worksheet(1); // sheet 1
+                    var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // kalo rreshtin header 
 
-                    if (string.IsNullOrEmpty(status))
+                    foreach (var row in rows)
                     {
-                        row.Cell(6).SetValue("Regjistruar"); // set default value to "Regjistruar"
-                        nderrimetBera = true; // Flag change
+                        string userId = row.Cell(1).GetValue<string>(); // merr vleren prej kolones A (userID)
+                        string status = row.Cell(6).GetValue<string>(); // merr vleren prej kolones F (status)
+
+                        if (string.IsNullOrEmpty(status))
+                        {
+                            row.Cell(6).SetValue("Regjistruar"); // nese nuk ka vlere statusi by default "Regjistruar"
+                            nderrimetBera = true; // Flag change
+                        }
+                        else if (status != "Pjesmarres" && userIds.Contains(userId))
+                        {
+                            row.Cell(6).SetValue("Pjesmarres"); // jepi vleren "Pjesmarres" nese userID eshte gjet edhe nuk eshte i ndrruar
+                            nderrimetBera = true; // Flag change
+                        }
                     }
-                    else if (status != "Pjesmarres" && userIds.Contains(userId))
-                    {
-                        row.Cell(6).SetValue("Pjesmarres"); // set value to "Pjesmarres" if userID is found and not already changed
-                        nderrimetBera = true; // Flag change
-                    }
+
+                    workbook.Save();
                 }
 
-                workbook.Save();
-            }
+                if (!nderrimetBera)
+                {
+                    // nese nuk ka ndrrime shfaq SweetAlert info
+                    return Content("<script>Swal.fire('Info', 'Lista eshte e perditsuar', 'info').then(() => window.location.href = '/');</script>", "text/html");
+                }
 
-            if (!nderrimetBera)
+                return Ok("Lista u validua me sukses");
+            }
+            catch (Exception ex)
             {
-                // If no changes were made, display SweetAlert info
-                return Content("<script>Swal.fire('Info', 'Lista eshte e perditsuar', 'info').then(() => window.location.href = '/');</script>", "text/html");
+                // kthe error per sweetalert2
+                return Content($"<script>Swal.fire('Error', 'Kishte problem ne perditsimin e listës', 'error');</script>", "text/html");
             }
-
-            return Ok("Lista u validua me sukses");
         }
 
-        
+
         /*
         public async Task<IActionResult> DownloadSpreadsheet()
         {
             var filePath = "path/to/save/spreadsheet.xlsx";
             await _googleSheetsService.DownloadSpreadsheetAsync(filePath);
 
-            // Return a file response
+            // kthen nje pergjigje file
             return PhysicalFile(filePath, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         }
         */
