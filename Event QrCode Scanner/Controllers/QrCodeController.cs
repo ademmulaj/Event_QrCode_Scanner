@@ -65,7 +65,6 @@ namespace Event_QrCode_Scanner.Controllers
             }
         }
 
-
         // merr si liste nga databaza per ti shfaqur 
         [HttpGet]
         public IActionResult GetScannedQRCodeData()
