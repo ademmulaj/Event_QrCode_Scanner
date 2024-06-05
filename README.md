@@ -1,1 +1,1 @@
-A Qr Code scanner for an event using Google Forms, Google Spreadsheet and Gs Script
+A Qr Code scanner that works on a LAN Network, for an event using Google Forms, Google Spreadsheet and Gs Script
