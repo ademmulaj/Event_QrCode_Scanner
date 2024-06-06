@@ -1,7 +1,16 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Event_QrCode_Scanner.DbContext;
+using Event_QrCode_Scanner.Helper;
 using Event_QrCode_Scanner.Models;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Services;
+using Google.Apis.Sheets.v4;
+using Google.Apis.Sheets.v4.Data;
+using Google.Apis.Util.Store;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace Event_QrCode_Scanner.Controllers
@@ -44,7 +53,6 @@ namespace Event_QrCode_Scanner.Controllers
 
             try
             {
-
                 // Krijo nje objekt te ri `QrCodeData` per te ruajtur te dhenat e QR kodit dhe kohen e skanimit
                 var newQrCodeData = new QrCodeData
                 {
@@ -59,7 +67,7 @@ namespace Event_QrCode_Scanner.Controllers
                 // Kthe nje pergjigje "OK" me nje mesazh suksesi
                 return Ok("QR Kodi eshte ruajtur ne databaze.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, "Ndodhi nje gabim ju lutem provoni me vone");
             }
@@ -83,11 +91,14 @@ namespace Event_QrCode_Scanner.Controllers
                 string fileName = "\\Konferenca Dev Ops 2024 (Responses).xlsx";
 
                 GetAndSaveDownloadsPath(out path);
+                string fullPath = Path.Combine(path + fileName);
 
                 var userIds = _context.QrCodeData.Select(q => q.QrCode_Data).ToList();
                 bool nderrimetBera = false; // Kontrollo per ndryshime
 
-                using (var workbook = new XLWorkbook(path+fileName))
+                DownloadTheExcelFile(path, fileName);
+
+                using (var workbook = new XLWorkbook(fullPath))
                 {
                     var worksheet = workbook.Worksheet(1); // sheet 1
                     var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // kalo rreshtin header 
@@ -117,12 +128,28 @@ namespace Event_QrCode_Scanner.Controllers
                     return Content("<script>Swal.fire('Info', 'Lista eshte e perditsuar', 'info').then(() => window.location.href = '/');</script>", "text/html");
                 }
                 return Ok("Lista u validua me sukses");
-            }
-            catch (Exception ex)
+            }            
+            catch (Exception)
             {
                 // kthe error nese file nuk gjindet
                 return StatusCode(500, new { message = "Deshtim i validimit ju lutem provoni me vone!" });
             }
+        }
+
+        public void DownloadTheExcelFile(string path, string fileName)
+        {
+            string exportUrl = "https://docs.google.com/spreadsheets/d/1QkJ54EMfBbD1JkKlScLazhXBH4WJNAkjBVur-MoKfhc/export?format=xlsx";
+            string downloadedFilePath = Path.Combine(path + fileName);
+
+            using (var client = new WebClient())
+            {                
+                if (FileHelper.FileExists(downloadedFilePath))
+                {
+                    FileHelper.DeleteFile(downloadedFilePath);
+                }
+
+                client.DownloadFile(exportUrl, downloadedFilePath);
+            } 
         }
 
         // Merr shtegun e folderit "Downloads" te perdoruesit
@@ -130,16 +157,5 @@ namespace Event_QrCode_Scanner.Controllers
         {
             path = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Downloads";
         }
-      
-        /*
-        public async Task<IActionResult> DownloadSpreadsheet()
-        {
-            var filePath = "path/to/save/spreadsheet.xlsx";
-            await _googleSheetsService.DownloadSpreadsheetAsync(filePath);
-
-            // kthen nje pergjigje file
-            return PhysicalFile(filePath, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        }
-        */
     }
 }

@@ -122,7 +122,7 @@
         }
 
         let lastScanTime = 0;
-        const scanDelay = 2500; // vonesa ndermjet skanimeve (milisekonda)
+        const scanDelay = 2200; // vonesa ndermjet skanimeve (milisekonda)
 
         function kontrolloQRkod() {
             console.log("Kontrollimi per QR kod...");
@@ -193,7 +193,7 @@
                     data.forEach(qrCodeData => {
                         const row = $('<tr>').append(
                             $('<td>').text(qrCodeData.id),
-                            $('<td>').text(qrCodeData.koha_skanimit),
+                            $('<td>').text(new Date(qrCodeData.koha_skanimit).toLocaleString()),
                             $('<td>').text(qrCodeData.qrCode_Data)
                         );
                         tbody.append(row);

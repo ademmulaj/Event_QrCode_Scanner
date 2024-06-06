@@ -31,8 +31,9 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 // specifikimi i ip adreses aktuale te HOST-IT
-var ipAddress = "192.168.1.29";
+var ipAddress = "192.168.1.5";
+
 // vendos portin e deshirurar
-var port = 8080; 
+var port = 6161; 
 
 app.Run($"https://{ipAddress}:{port}");
