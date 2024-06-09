@@ -53,7 +53,7 @@ namespace Event_QrCode_Scanner.Controllers
 
             try
             {
-                // Krijo nje objekt te ri `QrCodeData` per te ruajtur te dhenat e QR kodit dhe kohen e skanimit
+                // krijo nje objekt te ri `QrCodeData` per te ruajtur te dhenat e QR kodit dhe kohen e skanimit
                 var newQrCodeData = new QrCodeData
                 {
                     QrCode_Data = qrData,
@@ -94,10 +94,10 @@ namespace Event_QrCode_Scanner.Controllers
                 string fullPath = Path.Combine(path + fileName);
 
                 var userIds = _context.QrCodeData.Select(q => q.QrCode_Data).ToList();
-                bool nderrimetBera = false; // Kontrollo per ndryshime
+                bool nderrimetBera = false; 
 
                 DownloadTheExcelFile(path, fileName);
-
+                
                 using (var workbook = new XLWorkbook(fullPath))
                 {
                     var worksheet = workbook.Worksheet(1); // sheet 1
@@ -106,16 +106,16 @@ namespace Event_QrCode_Scanner.Controllers
                     foreach (var row in rows)
                     {
                         string userId = row.Cell(1).GetValue<string>(); // merr vleren prej kolones A (userID)
-                        string status = row.Cell(6).GetValue<string>(); // merr vleren prej kolones F (status)
+                        string status = row.Cell(7).GetValue<string>(); // merr vleren prej kolones G (status)
 
                         if (string.IsNullOrEmpty(status))
                         {
-                            row.Cell(6).SetValue("Regjistruar"); // nese nuk ka vlere statusi by default "Regjistruar"
+                            row.Cell(7).SetValue("Regjistruar"); // nese nuk ka vlere statusi by default "Regjistruar"
                             nderrimetBera = true; // Flag change
                         }
                         else if (status != "Pjesmarres" && userIds.Contains(userId))
                         {
-                            row.Cell(6).SetValue("Pjesmarres"); // jepi vleren "Pjesmarres" nese userID eshte gjet edhe nuk eshte i ndrruar
+                            row.Cell(7).SetValue("Pjesmarres"); // jepi vleren "Pjesmarres" nese userID eshte gjet edhe nuk eshte i ndrruar
                             nderrimetBera = true; // Flag change
                         }
                     }
@@ -143,12 +143,11 @@ namespace Event_QrCode_Scanner.Controllers
 
             using (var client = new WebClient())
             {                
-                if (FileHelper.FileExists(downloadedFilePath))
+                if (!FileHelper.FileExists(downloadedFilePath))
                 {
-                    FileHelper.DeleteFile(downloadedFilePath);
+                    client.DownloadFile(exportUrl, downloadedFilePath); 
+                    //FileHelper.DeleteFile(downloadedFilePath);
                 }
-
-                client.DownloadFile(exportUrl, downloadedFilePath);
             } 
         }
 

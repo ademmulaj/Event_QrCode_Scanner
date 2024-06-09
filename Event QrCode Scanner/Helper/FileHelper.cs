@@ -19,7 +19,7 @@
             }
             catch (IOException ex)
             {
-                // Handle potential file-in-use or other exceptions
+                // shfaq mesazhin kur file eshte ne perdorim ose përjashtime të tjera
                 Console.WriteLine($"Error deleting file: {ex.Message}");
             }
         }

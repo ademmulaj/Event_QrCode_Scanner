@@ -1,11 +1,14 @@
 ﻿namespace Event_QrCode_Scanner.Models
 {
-    public class user
+    public class User
     {
-        //public int id { get; set; }
+        public int Id { get; set; }
+        public DateTime TimeStamp { get; set; }
         public string FirstLastName { get; set; }
         public string Email { get; set; }
-        public int phoneNumber { get; set; }
-                
+        public string PhoneNumber { get; set; }
+        public string QrCodeUrl { get; set; }
+
+        public ICollection<QrCodeData> QrCodeScans { get; set; }
     }
 }
